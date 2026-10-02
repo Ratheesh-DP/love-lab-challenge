@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as JourneyRouteImport } from './routes/journey'
 import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as StartersRouteImport } from './routes/starters'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StartersRoute = StartersRouteImport.update({
+  id: '/starters',
+  path: '/starters',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/journey': typeof JourneyRoute
   '/matches': typeof MatchesRoute
   '/profile': typeof ProfileRoute
+  '/starters': typeof StartersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/journey': typeof JourneyRoute
   '/matches': typeof MatchesRoute
   '/profile': typeof ProfileRoute
+  '/starters': typeof StartersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/journey': typeof JourneyRoute
   '/matches': typeof MatchesRoute
   '/profile': typeof ProfileRoute
+  '/starters': typeof StartersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/journey' | '/matches' | '/profile'
+  fullPaths: '/' | '/journey' | '/matches' | '/profile' | '/starters'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/journey' | '/matches' | '/profile'
-  id: '__root__' | '/' | '/journey' | '/matches' | '/profile'
+  to: '/' | '/journey' | '/matches' | '/profile' | '/starters'
+  id: '__root__' | '/' | '/journey' | '/matches' | '/profile' | '/starters'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +76,7 @@ export interface RootRouteChildren {
   JourneyRoute: typeof JourneyRoute
   MatchesRoute: typeof MatchesRoute
   ProfileRoute: typeof ProfileRoute
+  StartersRoute: typeof StartersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/starters': {
+      id: '/starters'
+      path: '/starters'
+      fullPath: '/starters'
+      preLoaderRoute: typeof StartersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +124,7 @@ const rootRouteChildren: RootRouteChildren = {
   JourneyRoute: JourneyRoute,
   MatchesRoute: MatchesRoute,
   ProfileRoute: ProfileRoute,
+  StartersRoute: StartersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
