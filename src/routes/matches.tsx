@@ -44,12 +44,17 @@ function Matches() {
                 </div>
                 <p className={`eyebrow mt-0.5 ${isP ? "!text-practical" : "!text-adventurous"}`}>{isP ? "Practical" : "Adventurous"}</p>
                 <p className="mt-1 line-clamp-2 text-xs text-foreground/60">{p.bio}</p>
-                <button
-                  onClick={() => update((st) => ({ ...st, liked: st.liked.filter((x) => x !== p.id), skipped: [...st.skipped, p.id] }))}
-                  className="mt-2 text-xs font-semibold text-foreground/45"
-                >
-                  Unmatch
-                </button>
+                <div className="mt-2 flex gap-4">
+                  <Link to="/starters" search={{ match: p.id }} className={`text-xs font-semibold ${isP ? "text-practical" : "text-adventurous"}`}>
+                    Get openers
+                  </Link>
+                  <button
+                    onClick={() => update((st) => ({ ...st, liked: st.liked.filter((x) => x !== p.id), skipped: [...st.skipped, p.id] }))}
+                    className="text-xs font-semibold text-foreground/45"
+                  >
+                    Unmatch
+                  </button>
+                </div>
               </div>
             </div>
           );
