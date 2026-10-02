@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 const tabs = [
   { to: "/", label: "Discover" },
   { to: "/matches", label: "Matches" },
+  { to: "/starters", label: "Openers" },
   { to: "/journey", label: "Journey" },
   { to: "/profile", label: "Profile" },
 ] as const;
@@ -21,7 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="flex-1 pb-24">{children}</main>
-      <nav className="fixed inset-x-0 bottom-0 mx-auto grid max-w-md grid-cols-4 gap-1 border-t border-border bg-background px-5 py-3 text-center">
+      <nav className="fixed inset-x-0 bottom-0 mx-auto grid max-w-md grid-cols-5 gap-1 border-t border-border bg-background px-5 py-3 text-center">
         {tabs.map((t) => (
           <Link
             key={t.to}
