@@ -19,7 +19,7 @@ export async function generateStarters(input: {
   match: string;
   theory: "practical" | "adventurous";
 }) {
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = process.env['LOVABLE_API_KEY'];
   if (!apiKey) throw new Error("AI is not configured.");
   const provider = createOpenAI({
     baseURL: "https://ai.gateway.lovable.dev/v1",
@@ -53,7 +53,7 @@ export async function generateStarters(input: {
     },
   });
 
-  const text = await result.text.catch((e: unknown) => {
+  const text = await Promise.resolve(result.text).catch((e: unknown) => {
     failure ??= e;
     return "";
   });
