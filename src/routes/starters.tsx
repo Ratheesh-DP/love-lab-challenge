@@ -6,7 +6,7 @@ import { getStarters } from "@/lib/starters.functions";
 import { PEOPLE, useStore, type Theory } from "@/lib/store";
 
 export const Route = createFileRoute("/starters")({
-  validateSearch: (s: Record<string, unknown>) => ({ match: typeof s.match === "string" ? s.match : undefined }),
+  validateSearch: (s: Record<string, unknown>) => ({ match: typeof s["match"] === "string" ? (s["match"] as string) : undefined }),
   head: () => ({
     meta: [
       { title: "Icebreakers — Match/Make" },
