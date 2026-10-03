@@ -3,7 +3,7 @@ import { blockPerson, reportPerson, REPORT_REASONS, type Person } from "@/lib/st
 
 export function SafetyMenu({ person, onDone }: { person: Person; onDone?: () => void }) {
   const [open, setOpen] = useState<null | "menu" | "report" | "sent">(null);
-  const [reason, setReason] = useState(REPORT_REASONS[0]);
+  const [reason, setReason] = useState<string>(REPORT_REASONS[0]!);
   const [note, setNote] = useState("");
   const [alsoBlock, setAlsoBlock] = useState(true);
 
