@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { getStarters } from "@/lib/starters.functions";
-import { PEOPLE, useStore, type Theory } from "@/lib/store";
+import { EARN, PEOPLE, earn, useStore, visiblePeople, type Theory } from "@/lib/store";
 
 export const Route = createFileRoute("/starters")({
   validateSearch: (s: Record<string, unknown>) => ({ match: typeof s["match"] === "string" ? (s["match"] as string) : undefined }),
@@ -49,6 +49,7 @@ function Starters() {
     try {
       const r = await fn({ data: { interests, match, theory } });
       setOut(r.starters);
+      if (r.starters.length) earn(EARN.openers, "Generated openers");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -77,7 +78,7 @@ function Starters() {
         <div className="rounded-2xl p-4 ring-1 ring-border">
           <span className="eyebrow">Your match's profile</span>
           <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-            {PEOPLE.map((p) => (
+            {visiblePeople(s).map((p) => (
               <button key={p.id} onClick={() => { setMatch(`${p.name}, ${p.age}. ${p.line} ${p.bio} Tags: ${p.tags.join(", ")}.`); setTheory(p.theory); }}
                 className="flex shrink-0 items-center gap-1.5 rounded-full py-1 pl-1 pr-3 text-xs font-semibold ring-1 ring-border">
                 <img src={p.photo} alt="" width={24} height={24} className="size-6 rounded-full object-cover" />{p.name}

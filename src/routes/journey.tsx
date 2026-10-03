@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { dayOf, update, useStore } from "@/lib/store";
+import { dayOf, saveNote, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/journey")({
   head: () => ({
@@ -56,7 +56,7 @@ function Journey() {
         <textarea
           key={day}
           defaultValue={s.notes[day] ?? ""}
-          onBlur={(e) => update((st) => ({ ...st, notes: { ...st.notes, [day]: e.target.value } }))}
+          onBlur={(e) => saveNote(day, e.target.value)}
           placeholder="What did today teach you about love?"
           rows={4}
           className="mt-2 w-full resize-none bg-transparent text-sm outline-none placeholder:text-foreground/35"

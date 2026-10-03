@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { resetChallenge, update, useStore, type Theory } from "@/lib/store";
+import { PEOPLE, resetChallenge, unblockPerson, update, useStore, type Theory } from "@/lib/store";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -49,6 +49,22 @@ function Profile() {
         })}
       </div>
       <div className="mx-5 mt-6 rounded-2xl p-4 ring-1 ring-border">
+        <p className="eyebrow">Safety · blocked profiles</p>
+        {s.blocked.length === 0 ? (
+          <p className="mt-2 text-sm text-foreground/60">You haven't blocked anyone.</p>
+        ) : (
+          s.blocked.map((id) => {
+            const p = PEOPLE.find((x) => x.id === id);
+            return (
+              <div key={id} className="mt-2 flex items-center justify-between text-sm">
+                <span>{p?.name ?? id}{s.reports.some((r) => r.id === id) ? " · reported" : ""}</span>
+                <button onClick={() => unblockPerson(id)} className="text-xs font-semibold text-foreground/55">Unblock</button>
+              </div>
+            );
+          })
+        )}
+      </div>
+      <div className="mx-5 mt-3 rounded-2xl p-4 ring-1 ring-border">
         <p className="eyebrow">Your stats</p>
         <p className="mt-2 text-sm">{s.liked.length} matches · {s.skipped.length} skipped · {Object.values(s.notes).filter(Boolean).length} diary entries</p>
         <button

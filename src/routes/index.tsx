@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { PEOPLE, dayOf, scoreboard, update, useStore, type Theory } from "@/lib/store";
+import { dayOf, likePerson, scoreboard, update, useStore, visiblePeople, type Theory } from "@/lib/store";
+import { SafetyMenu } from "@/components/SafetyMenu";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -20,8 +21,8 @@ function Discover() {
   const s = useStore();
   const other: Theory = s.side === "practical" ? "adventurous" : "practical";
   const seen = new Set([...s.liked, ...s.skipped]);
-  const queue = PEOPLE.filter((p) => p.theory === s.side && !seen.has(p.id));
-  const rival = PEOPLE.find((p) => p.theory === other && !seen.has(p.id));
+  const queue = visiblePeople(s).filter((p) => p.theory === s.side && !seen.has(p.id));
+  const rival = visiblePeople(s).find((p) => p.theory === other && !seen.has(p.id));
   const current = queue[0];
   const board = scoreboard(s);
   const total = board.practical + board.adventurous;
@@ -29,7 +30,7 @@ function Discover() {
   const isP = s.side === "practical";
 
   const act = (id: string, like: boolean) =>
-    update((st) => ({ ...st, [like ? "liked" : "skipped"]: [...st[like ? "liked" : "skipped"], id] }));
+    like ? likePerson(id) : update((st) => ({ ...st, skipped: [...st.skipped, id] }));
   const switchSide = () => update((st) => ({ ...st, side: other }));
 
   return (
@@ -71,7 +72,10 @@ function Discover() {
             <img src={current.photo} alt={current.name} width={768} height={960} className="min-h-[212px] w-[45%] object-cover" />
             <div className="flex flex-1 flex-col justify-between p-4">
               <div>
-                <p className="font-display text-xl leading-tight">{current.name}, {current.age}</p>
+                <div className="flex items-start justify-between">
+                  <p className="font-display text-xl leading-tight">{current.name}, {current.age}</p>
+                  <SafetyMenu person={current} />
+                </div>
                 <p className="mt-0.5 text-xs text-foreground/55">{current.line}</p>
                 <div className="mt-2 flex flex-wrap gap-1">
                   {current.tags.map((t) => (
