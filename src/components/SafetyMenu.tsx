@@ -7,7 +7,11 @@ export function SafetyMenu({ person, onDone }: { person: Person; onDone?: () => 
   const [note, setNote] = useState("");
   const [alsoBlock, setAlsoBlock] = useState(true);
 
-  const close = () => { setOpen(null); setNote(""); };
+  const close = () => {
+    // Block only after the confirmation is dismissed, so this sheet stays mounted
+    if (open === "sent" && alsoBlock) { blockPerson(person.id); onDone?.(); }
+    setOpen(null); setNote("");
+  };
 
   return (
     <>
@@ -44,7 +48,7 @@ export function SafetyMenu({ person, onDone }: { person: Person; onDone?: () => 
                   <input type="checkbox" checked={alsoBlock} onChange={(e) => setAlsoBlock(e.target.checked)} className="accent-foreground" />
                   Also block {person.name}
                 </label>
-                <button onClick={() => { reportPerson(person.id, reason, note.trim(), alsoBlock); setOpen("sent"); }}
+                <button onClick={() => { reportPerson(person.id, reason, note.trim(), false); setOpen("sent"); }}
                   className="mt-4 w-full rounded-full bg-destructive py-3 text-sm font-semibold text-destructive-foreground">Send report</button>
               </>
             )}
@@ -52,7 +56,7 @@ export function SafetyMenu({ person, onDone }: { person: Person; onDone?: () => 
               <>
                 <p className="font-display text-xl">Thanks for telling us.</p>
                 <p className="mt-1 text-sm text-foreground/60">Your report was saved. {alsoBlock ? `${person.name} won't appear again.` : ""}</p>
-                <button onClick={() => { close(); if (alsoBlock) onDone?.(); }}
+                <button onClick={close}
                   className="mt-4 w-full rounded-full bg-foreground py-3 text-sm font-semibold text-background">Done</button>
               </>
             )}
