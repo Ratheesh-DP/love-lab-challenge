@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { PEOPLE, update, useStore } from "@/lib/store";
+import { SafetyMenu } from "@/components/SafetyMenu";
 
 export const Route = createFileRoute("/matches")({
   head: () => ({
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/matches")({
 
 function Matches() {
   const s = useStore();
-  const list = s.liked.map((id) => PEOPLE.find((p) => p.id === id)!).filter(Boolean);
+  const list = s.liked.map((id) => PEOPLE.find((p) => p.id === id)!).filter((p) => p && !s.blocked.includes(p.id));
   return (
     <AppShell>
       <div className="px-5 pt-2">
@@ -40,13 +41,19 @@ function Matches() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
                   <p className="font-display text-lg leading-tight">{p.name}, {p.age}</p>
-                  <span className={`font-display text-sm font-semibold ${isP ? "text-practical" : "text-adventurous"}`}>{p.score}</span>
+                  <div className="flex items-center gap-1">
+                    <span className={`font-display text-sm font-semibold ${isP ? "text-practical" : "text-adventurous"}`}>{p.score}</span>
+                    <SafetyMenu person={p} />
+                  </div>
                 </div>
                 <p className={`eyebrow mt-0.5 ${isP ? "!text-practical" : "!text-adventurous"}`}>{isP ? "Practical" : "Adventurous"}</p>
                 <p className="mt-1 line-clamp-2 text-xs text-foreground/60">{p.bio}</p>
                 <div className="mt-2 flex gap-4">
                   <Link to="/starters" search={{ match: p.id }} className={`text-xs font-semibold ${isP ? "text-practical" : "text-adventurous"}`}>
                     Get openers
+                  </Link>
+                  <Link to="/wallet" search={{ match: p.id }} className="text-xs font-semibold text-foreground/70">
+                    Plan a date
                   </Link>
                   <button
                     onClick={() => update((st) => ({ ...st, liked: st.liked.filter((x) => x !== p.id), skipped: [...st.skipped, p.id] }))}

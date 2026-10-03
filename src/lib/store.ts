@@ -25,16 +25,38 @@ export const PEOPLE: Person[] = [
   { id: "ines", name: "Inés", age: 27, photo: ines, theory: "adventurous", line: "Will race you to the top of the cliff", bio: "Marine biologist. Swims in cold water for fun. Looking for someone who says yes first.", tags: ["Outdoors", "Travel", "Live music"], score: 84 },
 ];
 
+export type Report = { id: string; reason: string; note: string; at: number };
+export type Txn = { at: number; amount: number; label: string };
+export type DatePlan = { id: string; personId: string; kind: string; cost: number; at: number };
+
 type State = {
   side: Theory;
   startedAt: number;
   liked: string[];
   skipped: string[];
   notes: Record<number, string>;
+  blocked: string[];
+  reports: Report[];
+  points: number;
+  ledger: Txn[];
+  dates: DatePlan[];
+  lastCheckIn: string | null;
 };
 
+export const EARN = { match: 10, note: 5, openers: 3, checkIn: 20 } as const;
+export const DATE_KINDS = [
+  { id: "coffee", label: "Coffee & a walk", cost: 30, theory: "practical" as Theory },
+  { id: "dinner", label: "Dinner reservation", cost: 60, theory: "practical" as Theory },
+  { id: "surprise", label: "Surprise day trip", cost: 90, theory: "adventurous" as Theory },
+  { id: "rooftop", label: "Rooftop concert", cost: 70, theory: "adventurous" as Theory },
+];
+export const REPORT_REASONS = ["Fake profile or scam", "Harassment or threats", "Inappropriate photos or messages", "Underage", "Something else"];
+
 const KEY = "matchmake-v1";
-const initial: State = { side: "practical", startedAt: Date.now() - 11 * 864e5, liked: [], skipped: [], notes: {} };
+const initial: State = {
+  side: "practical", startedAt: Date.now() - 11 * 864e5, liked: [], skipped: [], notes: {},
+  blocked: [], reports: [], points: 100, ledger: [{ at: Date.now(), amount: 100, label: "Welcome bonus" }], dates: [], lastCheckIn: null,
+};
 let state: State = initial;
 let loaded = false;
 const subs = new Set<() => void>();
@@ -56,7 +78,59 @@ export function update(fn: (s: State) => State) {
 }
 
 export function resetChallenge() {
-  update(() => ({ ...initial, startedAt: Date.now() }));
+  update(() => ({ ...initial, startedAt: Date.now(), ledger: [{ at: Date.now(), amount: 100, label: "Welcome bonus" }] }));
+}
+
+const credit = (s: State, amount: number, label: string): State => ({
+  ...s, points: s.points + amount, ledger: [{ at: Date.now(), amount, label }, ...s.ledger].slice(0, 100),
+});
+
+export function earn(amount: number, label: string) {
+  update((s) => credit(s, amount, label));
+}
+
+export function likePerson(id: string) {
+  const p = PEOPLE.find((x) => x.id === id);
+  update((s) => credit({ ...s, liked: [...s.liked, id] }, EARN.match, `Matched with ${p?.name ?? "someone"}`));
+}
+
+export function saveNote(day: number, text: string) {
+  update((s) => {
+    const firstTime = !s.notes[day] && text.trim().length > 0;
+    const next = { ...s, notes: { ...s.notes, [day]: text } };
+    return firstTime ? credit(next, EARN.note, `Diary entry · day ${day}`) : next;
+  });
+}
+
+const today = () => new Date().toISOString().slice(0, 10);
+export const canCheckIn = (s: State) => s.lastCheckIn !== today();
+export function checkIn() {
+  update((s) => (canCheckIn(s) ? credit({ ...s, lastCheckIn: today() }, EARN.checkIn, "Daily check-in") : s));
+}
+
+export function bookDate(personId: string, kindId: string): boolean {
+  const kind = DATE_KINDS.find((k) => k.id === kindId);
+  const p = PEOPLE.find((x) => x.id === personId);
+  if (!kind || !p) return false;
+  let ok = false;
+  update((s) => {
+    if (s.points < kind.cost) return s;
+    ok = true;
+    const d: DatePlan = { id: crypto.randomUUID(), personId, kind: kind.label, cost: kind.cost, at: Date.now() };
+    return credit({ ...s, dates: [d, ...s.dates] }, -kind.cost, `${kind.label} with ${p.name}`);
+  });
+  return ok;
+}
+
+export function blockPerson(id: string) {
+  update((s) => ({ ...s, blocked: s.blocked.includes(id) ? s.blocked : [...s.blocked, id], liked: s.liked.filter((x) => x !== id) }));
+}
+export function unblockPerson(id: string) {
+  update((s) => ({ ...s, blocked: s.blocked.filter((x) => x !== id) }));
+}
+export function reportPerson(id: string, reason: string, note: string, alsoBlock: boolean) {
+  update((s) => ({ ...s, reports: [{ id, reason, note: note.slice(0, 500), at: Date.now() }, ...s.reports] }));
+  if (alsoBlock) blockPerson(id);
 }
 
 export function useStore() {
@@ -66,6 +140,8 @@ export function useStore() {
     () => initial,
   );
 }
+
+export const visiblePeople = (s: State) => PEOPLE.filter((p) => !s.blocked.includes(p.id));
 
 export function dayOf(s: State) {
   return Math.min(60, Math.max(1, Math.floor((Date.now() - s.startedAt) / 864e5) + 1));

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { useStore } from "@/lib/store";
 
 const tabs = [
   { to: "/", label: "Discover" },
@@ -10,16 +11,16 @@ const tabs = [
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const s = useStore();
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background">
       <header className="flex items-center justify-between px-5 pt-4 pb-3">
         <Link to="/" className="font-display text-xl font-semibold tracking-tight">
           Match<span className="text-adventurous">/</span>Make
         </Link>
-        <div className="flex items-center gap-2 text-xs font-medium">
-          <span className="size-2 rounded-full bg-practical" />Practical
-          <span className="size-2 rounded-full bg-adventurous" />Adventurous
-        </div>
+        <Link to="/wallet" search={{ match: undefined }} className="flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1 text-xs font-semibold text-background">
+          <span className="size-2 rounded-full bg-adventurous" />{s.points} pts
+        </Link>
       </header>
       <main className="flex-1 pb-24">{children}</main>
       <nav className="fixed inset-x-0 bottom-0 mx-auto grid max-w-md grid-cols-5 gap-1 border-t border-border bg-background px-5 py-3 text-center">

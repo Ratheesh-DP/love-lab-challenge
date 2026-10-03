@@ -14,6 +14,7 @@ import { Route as JourneyRouteImport } from './routes/journey'
 import { Route as MatchesRouteImport } from './routes/matches'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as StartersRouteImport } from './routes/starters'
+import { Route as WalletRouteImport } from './routes/wallet'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const StartersRoute = StartersRouteImport.update({
   path: '/starters',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/matches': typeof MatchesRoute
   '/profile': typeof ProfileRoute
   '/starters': typeof StartersRoute
+  '/wallet': typeof WalletRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/matches': typeof MatchesRoute
   '/profile': typeof ProfileRoute
   '/starters': typeof StartersRoute
+  '/wallet': typeof WalletRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,22 @@ export interface FileRoutesById {
   '/matches': typeof MatchesRoute
   '/profile': typeof ProfileRoute
   '/starters': typeof StartersRoute
+  '/wallet': typeof WalletRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/journey' | '/matches' | '/profile' | '/starters'
+  fullPaths:
+    '/' | '/journey' | '/matches' | '/profile' | '/starters' | '/wallet'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/journey' | '/matches' | '/profile' | '/starters'
-  id: '__root__' | '/' | '/journey' | '/matches' | '/profile' | '/starters'
+  to: '/' | '/journey' | '/matches' | '/profile' | '/starters' | '/wallet'
+  id:
+    | '__root__'
+    | '/'
+    | '/journey'
+    | '/matches'
+    | '/profile'
+    | '/starters'
+    | '/wallet'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +94,7 @@ export interface RootRouteChildren {
   MatchesRoute: typeof MatchesRoute
   ProfileRoute: typeof ProfileRoute
   StartersRoute: typeof StartersRoute
+  WalletRoute: typeof WalletRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +134,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StartersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +150,7 @@ const rootRouteChildren: RootRouteChildren = {
   MatchesRoute: MatchesRoute,
   ProfileRoute: ProfileRoute,
   StartersRoute: StartersRoute,
+  WalletRoute: WalletRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
