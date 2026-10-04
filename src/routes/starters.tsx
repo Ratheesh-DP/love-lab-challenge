@@ -116,6 +116,36 @@ function Starters() {
             </button>
           </div>
         ))}
+
+        <div className="rounded-2xl p-4 ring-1 ring-border">
+          <span className="eyebrow">What did you actually send?</span>
+          <p className="mt-1 text-xs text-foreground/55">Paste a reply or opener you wrote yourself. The AI learns your voice from it.</p>
+          <textarea value={mine} onChange={(e) => setMine(e.target.value)} rows={2} maxLength={300}
+            placeholder="ok but which bookshop has the best cat"
+            className="mt-2 w-full resize-none bg-transparent text-sm outline-none placeholder:text-foreground/35" />
+          <button disabled={!mine.trim()} onClick={() => { rememberWritten(mine); setMine(""); }}
+            className="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background disabled:opacity-40">Save to my style</button>
+        </div>
+
+        <div className="rounded-2xl p-4 ring-1 ring-border">
+          <div className="flex items-center justify-between">
+            <span className="eyebrow">Your match style</span>
+            {(s.picked.length > 0 || s.written.length > 0) && (
+              <button onClick={() => confirm("Forget everything the AI learned about your style?") && clearStyle()}
+                className="text-xs font-semibold text-foreground/50">Reset</button>
+            )}
+          </div>
+          <p className="mt-1 text-sm">{s.picked.length} openers chosen · {s.written.length} of your own lines</p>
+          {s.picked.length + s.written.length === 0 ? (
+            <p className="mt-1 text-xs text-foreground/55">Copy openers you like or save your own lines. Each new batch gets closer to how you talk.</p>
+          ) : (
+            <ul className="mt-2 space-y-1">
+              {[...s.written.slice(0, 3).map((t) => ["You wrote", t]), ...s.picked.slice(0, 3).map((t) => ["You picked", t])].map(([k, t], i) => (
+                <li key={i} className="text-xs text-foreground/70"><span className="font-semibold">{k}:</span> {t}</li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </AppShell>
   );
