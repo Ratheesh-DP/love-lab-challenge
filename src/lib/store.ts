@@ -41,6 +41,8 @@ type State = {
   ledger: Txn[];
   dates: DatePlan[];
   lastCheckIn: string | null;
+  picked: string[];
+  written: string[];
 };
 
 export const EARN = { match: 10, note: 5, openers: 3, checkIn: 20 } as const;
@@ -55,7 +57,7 @@ export const REPORT_REASONS = ["Fake profile or scam", "Harassment or threats", 
 const KEY = "matchmake-v1";
 const initial: State = {
   side: "practical", startedAt: Date.now() - 11 * 864e5, liked: [], skipped: [], notes: {},
-  blocked: [], reports: [], points: 100, ledger: [{ at: Date.now(), amount: 100, label: "Welcome bonus" }], dates: [], lastCheckIn: null,
+  blocked: [], reports: [], points: 100, ledger: [{ at: Date.now(), amount: 100, label: "Welcome bonus" }], dates: [], lastCheckIn: null, picked: [], written: [],
 };
 let state: State = initial;
 let loaded = false;
@@ -139,6 +141,18 @@ export function useStore() {
     () => { load(); return state; },
     () => initial,
   );
+}
+
+// Style memory: starters the dater chose and lines they wrote themselves (newest first, capped)
+export function rememberPicked(line: string) {
+  update((s) => ({ ...s, picked: [line, ...s.picked.filter((x) => x !== line)].slice(0, 30) }));
+}
+export function rememberWritten(line: string) {
+  const t = line.trim().slice(0, 300);
+  if (t) update((s) => ({ ...s, written: [t, ...s.written.filter((x) => x !== t)].slice(0, 30) }));
+}
+export function clearStyle() {
+  update((s) => ({ ...s, picked: [], written: [] }));
 }
 
 export const visiblePeople = (s: State) => PEOPLE.filter((p) => !s.blocked.includes(p.id));

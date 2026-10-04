@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { getStarters } from "@/lib/starters.functions";
-import { EARN, PEOPLE, earn, useStore, visiblePeople, type Theory } from "@/lib/store";
+import { EARN, PEOPLE, clearStyle, earn, rememberPicked, rememberWritten, useStore, visiblePeople, type Theory } from "@/lib/store";
 
 export const Route = createFileRoute("/starters")({
   validateSearch: (s: Record<string, unknown>) => ({ match: typeof s["match"] === "string" ? (s["match"] as string) : undefined }),
@@ -33,6 +33,7 @@ function Starters() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState<number | null>(null);
+  const [mine, setMine] = useState("");
 
   useEffect(() => setInterests(localStorage.getItem(INTERESTS_KEY) ?? ""), []);
   useEffect(() => {
@@ -47,7 +48,7 @@ function Starters() {
     setBusy(true); setErr(""); setOut([]);
     localStorage.setItem(INTERESTS_KEY, interests);
     try {
-      const r = await fn({ data: { interests, match, theory } });
+      const r = await fn({ data: { interests, match, theory, picked: s.picked.slice(0, 10), written: s.written.slice(0, 10) } });
       setOut(r.starters);
       if (r.starters.length) earn(EARN.openers, "Generated openers");
     } catch (e) {
@@ -109,12 +110,42 @@ function Starters() {
         {out.map((line, i) => (
           <div key={i} className={`animate-card-in rounded-2xl p-4 ${isP ? "bg-practical-soft" : "bg-adventurous-soft"}`} style={{ animationDelay: `${i * 60}ms` }}>
             <p className="text-sm leading-relaxed">{line}</p>
-            <button onClick={() => { navigator.clipboard.writeText(line); setCopied(i); setTimeout(() => setCopied(null), 1500); }}
+            <button onClick={() => { navigator.clipboard.writeText(line); rememberPicked(line); setCopied(i); setTimeout(() => setCopied(null), 1500); }}
               className={`mt-2 text-xs font-semibold ${isP ? "text-practical" : "text-adventurous"}`}>
               {copied === i ? "Copied" : "Copy"}
             </button>
           </div>
         ))}
+
+        <div className="rounded-2xl p-4 ring-1 ring-border">
+          <span className="eyebrow">What did you actually send?</span>
+          <p className="mt-1 text-xs text-foreground/55">Paste a reply or opener you wrote yourself. The AI learns your voice from it.</p>
+          <textarea value={mine} onChange={(e) => setMine(e.target.value)} rows={2} maxLength={300}
+            placeholder="ok but which bookshop has the best cat"
+            className="mt-2 w-full resize-none bg-transparent text-sm outline-none placeholder:text-foreground/35" />
+          <button disabled={!mine.trim()} onClick={() => { rememberWritten(mine); setMine(""); }}
+            className="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background disabled:opacity-40">Save to my style</button>
+        </div>
+
+        <div className="rounded-2xl p-4 ring-1 ring-border">
+          <div className="flex items-center justify-between">
+            <span className="eyebrow">Your match style</span>
+            {(s.picked.length > 0 || s.written.length > 0) && (
+              <button onClick={() => confirm("Forget everything the AI learned about your style?") && clearStyle()}
+                className="text-xs font-semibold text-foreground/50">Reset</button>
+            )}
+          </div>
+          <p className="mt-1 text-sm">{s.picked.length} openers chosen · {s.written.length} of your own lines</p>
+          {s.picked.length + s.written.length === 0 ? (
+            <p className="mt-1 text-xs text-foreground/55">Copy openers you like or save your own lines. Each new batch gets closer to how you talk.</p>
+          ) : (
+            <ul className="mt-2 space-y-1">
+              {[...s.written.slice(0, 3).map((t) => ["You wrote", t]), ...s.picked.slice(0, 3).map((t) => ["You picked", t])].map(([k, t], i) => (
+                <li key={i} className="text-xs text-foreground/70"><span className="font-semibold">{k}:</span> {t}</li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </AppShell>
   );

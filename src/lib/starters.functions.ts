@@ -9,6 +9,8 @@ export const getStarters = createServerFn({ method: "POST" })
         interests: z.string().trim().min(3).max(1500),
         match: z.string().trim().min(3).max(2000),
         theory: z.enum(["practical", "adventurous"]),
+        picked: z.array(z.string().max(300)).max(10).default([]),
+        written: z.array(z.string().max(300)).max(10).default([]),
       })
       .parse(d),
   )
