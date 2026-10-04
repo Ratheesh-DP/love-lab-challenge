@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { getStarters } from "@/lib/starters.functions";
-import { EARN, PEOPLE, earn, useStore, visiblePeople, type Theory } from "@/lib/store";
+import { EARN, PEOPLE, clearStyle, earn, rememberPicked, rememberWritten, useStore, visiblePeople, type Theory } from "@/lib/store";
 
 export const Route = createFileRoute("/starters")({
   validateSearch: (s: Record<string, unknown>) => ({ match: typeof s["match"] === "string" ? (s["match"] as string) : undefined }),
@@ -33,6 +33,7 @@ function Starters() {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState<number | null>(null);
+  const [mine, setMine] = useState("");
 
   useEffect(() => setInterests(localStorage.getItem(INTERESTS_KEY) ?? ""), []);
   useEffect(() => {
@@ -47,7 +48,7 @@ function Starters() {
     setBusy(true); setErr(""); setOut([]);
     localStorage.setItem(INTERESTS_KEY, interests);
     try {
-      const r = await fn({ data: { interests, match, theory } });
+      const r = await fn({ data: { interests, match, theory, picked: s.picked.slice(0, 10), written: s.written.slice(0, 10) } });
       setOut(r.starters);
       if (r.starters.length) earn(EARN.openers, "Generated openers");
     } catch (e) {
@@ -109,7 +110,7 @@ function Starters() {
         {out.map((line, i) => (
           <div key={i} className={`animate-card-in rounded-2xl p-4 ${isP ? "bg-practical-soft" : "bg-adventurous-soft"}`} style={{ animationDelay: `${i * 60}ms` }}>
             <p className="text-sm leading-relaxed">{line}</p>
-            <button onClick={() => { navigator.clipboard.writeText(line); setCopied(i); setTimeout(() => setCopied(null), 1500); }}
+            <button onClick={() => { navigator.clipboard.writeText(line); rememberPicked(line); setCopied(i); setTimeout(() => setCopied(null), 1500); }}
               className={`mt-2 text-xs font-semibold ${isP ? "text-practical" : "text-adventurous"}`}>
               {copied === i ? "Copied" : "Copy"}
             </button>

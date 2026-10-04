@@ -18,6 +18,8 @@ export async function generateStarters(input: {
   interests: string;
   match: string;
   theory: "practical" | "adventurous";
+  picked: string[];
+  written: string[];
 }) {
   const apiKey = process.env['LOVABLE_API_KEY'];
   if (!apiKey) throw new Error("AI is not configured.");
@@ -38,7 +40,13 @@ export async function generateStarters(input: {
     model: provider.responses("openai/gpt-6-astra"),
     system:
       "You write dating-app conversation starters. Be warm, specific, never creepy or generic. Reference concrete overlaps between the two people. Output exactly 5 starters, one per line, no numbering, no quotes, each under 160 characters.",
-    prompt: `Style: ${style}.\n\nMy interests:\n${input.interests}\n\nMy match's profile:\n${input.match}`,
+    prompt: [
+      `Style: ${style}.`,
+      `My interests:\n${input.interests}`,
+      `My match's profile:\n${input.match}`,
+      input.picked.length ? `Openers I actually chose before (learn my taste from these, don't repeat them):\n- ${input.picked.join("\n- ")}` : "",
+      input.written.length ? `Messages I wrote myself (match my voice, length, humor and punctuation):\n- ${input.written.join("\n- ")}` : "",
+    ].filter(Boolean).join("\n\n"),
     onError: ({ error }) => {
       failure = error;
     },
