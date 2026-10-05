@@ -193,4 +193,15 @@ export async function attachUser(id: string | null) {
   }
   localStorage.setItem(KEY, JSON.stringify(state));
   subs.forEach((f) => f());
+  await claimPurchases();
+}
+
+// Credit any QR purchases an admin has approved since last visit (server marks them claimed once)
+export async function claimPurchases() {
+  if (!userId) return 0;
+  const { data, error } = await supabase.rpc("claim_purchases");
+  if (error || !data?.length) return 0;
+  let total = 0;
+  update((s) => data.reduce((acc, p) => { total += p.points; return credit(acc, p.points, `Bought ${p.points} pts`); }, s));
+  return total;
 }
