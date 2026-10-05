@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useStore } from "@/lib/store";
+import { AuthGate } from "@/components/AuthGate";
 
 const tabs = [
   { to: "/", label: "Discover" },
@@ -13,6 +14,7 @@ const tabs = [
 export function AppShell({ children }: { children: ReactNode }) {
   const s = useStore();
   return (
+    <AuthGate>
     <div className="mx-auto flex min-h-screen max-w-md flex-col bg-background">
       <header className="flex items-center justify-between px-5 pt-4 pb-3">
         <Link to="/" className="font-display text-xl font-semibold tracking-tight">
@@ -38,5 +40,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         ))}
       </nav>
     </div>
+    </AuthGate>
   );
 }

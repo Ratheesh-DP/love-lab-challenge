@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { signOut } from "@/components/AuthGate";
 import { PEOPLE, resetChallenge, unblockPerson, update, useStore, type Theory } from "@/lib/store";
 
 export const Route = createFileRoute("/profile")({
@@ -72,6 +73,9 @@ function Profile() {
           className="mt-3 text-xs font-semibold text-destructive"
         >
           Restart challenge
+        </button>
+        <button onClick={() => signOut()} className="mt-3 ml-4 text-xs font-semibold text-muted-foreground">
+          Sign out
         </button>
       </div>
     </AppShell>
