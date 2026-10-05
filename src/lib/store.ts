@@ -77,6 +77,7 @@ export function update(fn: (s: State) => State) {
   state = fn(state);
   localStorage.setItem(KEY, JSON.stringify(state));
   subs.forEach((f) => f());
+  scheduleSave();
 }
 
 export function resetChallenge() {
@@ -132,6 +133,7 @@ export function unblockPerson(id: string) {
 }
 export function reportPerson(id: string, reason: string, note: string, alsoBlock: boolean) {
   update((s) => ({ ...s, reports: [{ id, reason, note: note.slice(0, 500), at: Date.now() }, ...s.reports] }));
+  if (userId) supabase.from("reports").insert({ person_id: id, reason: reason.slice(0, 100), note: note.slice(0, 500) }).then(({ error }) => error && console.error(error));
   if (alsoBlock) blockPerson(id);
 }
 
@@ -165,4 +167,30 @@ export function dayOf(s: State) {
 export function scoreboard(s: State) {
   const mine = (t: Theory) => s.liked.filter((id) => PEOPLE.find((p) => p.id === id)?.theory === t).length;
   return { practical: 14 + mine("practical"), adventurous: 11 + mine("adventurous") };
+}
+
+// ---- Cloud sync: each signed-in dater's state lives in their own account ----
+import { supabase } from "@/integrations/supabase/client";
+let userId: string | null = null;
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+export function scheduleSave() {
+  if (!userId) return;
+  const uid = userId;
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    supabase.from("user_state").upsert({ user_id: uid, state: state as never, updated_at: new Date().toISOString() }).then(({ error }) => error && console.error(error));
+  }, 600);
+}
+export async function attachUser(id: string | null) {
+  userId = id;
+  if (!id) return;
+  const { data } = await supabase.from("user_state").select("state").eq("user_id", id).maybeSingle();
+  if (data?.state && Object.keys(data.state as object).length) {
+    state = { ...initial, ...(data.state as Partial<State>) };
+  } else {
+    load(); // first sign-in: carry this device's progress into the account
+    scheduleSave();
+  }
+  localStorage.setItem(KEY, JSON.stringify(state));
+  subs.forEach((f) => f());
 }
