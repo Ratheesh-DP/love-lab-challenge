@@ -74,4 +74,6 @@ function SignIn() {
 
 export async function signOut() {
   await supabase.auth.signOut();
+  localStorage.removeItem("matchmake-v1");
+  window.location.reload();
 }
