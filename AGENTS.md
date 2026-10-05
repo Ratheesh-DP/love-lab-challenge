@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 - Dater state syncs as one JSON row per user in user_state (store.ts attachUser/scheduleSave); reports also go to a separate reports table so moderators can review them. Why: cross-device persistence with minimal refactor.
 - Points live in the user-editable state blob; move balances to server-validated logic before selling points. Why: client-written points can be faked.
+- Store bundles are defined in src/routes/store.tsx (BUNDLES); checkout must credit points server-side from a verified payment webhook. Why: purchases can't be trusted from the client.
