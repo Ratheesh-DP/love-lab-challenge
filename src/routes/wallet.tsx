@@ -35,6 +35,9 @@ function Wallet() {
           className="mt-4 w-full rounded-full bg-practical py-3 text-sm font-semibold text-primary-foreground disabled:opacity-40">
           {canCheckIn(s) ? `Daily check-in · +${EARN.checkIn}` : "Checked in today — back tomorrow"}
         </button>
+        <Link to="/store" className="mt-2 block w-full rounded-full py-3 text-center text-sm font-semibold ring-1 ring-border">
+          Get more points
+        </Link>
       </div>
 
       <div className="mx-5 mt-4 rounded-2xl p-4 ring-1 ring-border">
