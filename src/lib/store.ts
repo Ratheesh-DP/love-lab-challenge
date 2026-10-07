@@ -27,7 +27,7 @@ export const PEOPLE: Person[] = [
 
 export type Report = { id: string; reason: string; note: string; at: number };
 export type Txn = { at: number; amount: number; label: string };
-export type DatePlan = { id: string; personId: string; kind: string; cost: number; at: number };
+export type DatePlan = { id: string; personId: string; kind: string; cost: number; at: number; when?: number; location?: string };
 
 type State = {
   side: Theory;
@@ -111,7 +111,7 @@ export function checkIn() {
   update((s) => (canCheckIn(s) ? credit({ ...s, lastCheckIn: today() }, EARN.checkIn, "Daily check-in") : s));
 }
 
-export function bookDate(personId: string, kindId: string): boolean {
+export function bookDate(personId: string, kindId: string, when?: number, location?: string): boolean {
   const kind = DATE_KINDS.find((k) => k.id === kindId);
   const p = PEOPLE.find((x) => x.id === personId);
   if (!kind || !p) return false;
@@ -119,7 +119,7 @@ export function bookDate(personId: string, kindId: string): boolean {
   update((s) => {
     if (s.points < kind.cost) return s;
     ok = true;
-    const d: DatePlan = { id: crypto.randomUUID(), personId, kind: kind.label, cost: kind.cost, at: Date.now() };
+    const d: DatePlan = { id: crypto.randomUUID(), personId, kind: kind.label, cost: kind.cost, at: Date.now(), when, location: location?.slice(0, 120) };
     return credit({ ...s, dates: [d, ...s.dates] }, -kind.cost, `${kind.label} with ${p.name}`);
   });
   return ok;
@@ -205,3 +205,6 @@ export async function claimPurchases() {
   update((s) => data.reduce((acc, p) => { total += p.points; return credit(acc, p.points, `Bought ${p.points} pts`); }, s));
   return total;
 }
+
+// Which challenge day (1-60) a timestamp falls on
+export const dayOfTime = (s: State, t: number) => Math.floor((t - s.startedAt) / 864e5) + 1;

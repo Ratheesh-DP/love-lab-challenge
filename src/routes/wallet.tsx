@@ -69,15 +69,11 @@ function Wallet() {
                 const afford = s.points >= k.cost;
                 const isP = k.theory === "practical";
                 return (
-                  <button key={k.id} disabled={!afford}
-                    onClick={() => {
-                      const ok = bookDate(personId!, k.id);
-                      setMsg(ok ? `Booked: ${k.label} with ${PEOPLE.find((p) => p.id === personId)?.name}.` : "Not enough points.");
-                    }}
-                    className={`rounded-2xl p-3 text-left disabled:opacity-40 ${isP ? "bg-practical-soft" : "bg-adventurous-soft"}`}>
+                  <Link key={k.id} to="/book" search={{ match: personId, kind: k.id }}
+                    className={`rounded-2xl p-3 text-left ${afford ? "" : "opacity-40"} ${isP ? "bg-practical-soft" : "bg-adventurous-soft"}`}>
                     <p className="text-sm font-semibold">{k.label}</p>
                     <p className={`mt-1 font-display text-lg ${isP ? "text-practical" : "text-adventurous"}`}>−{k.cost}</p>
-                  </button>
+                  </Link>
                 );
               })}
             </div>
@@ -90,7 +86,10 @@ function Wallet() {
         <div className="mx-5 mt-4 rounded-2xl p-4 ring-1 ring-border">
           <p className="eyebrow">Upcoming dates</p>
           {s.dates.map((d) => (
-            <p key={d.id} className="mt-2 text-sm">{d.kind} · {PEOPLE.find((p) => p.id === d.personId)?.name}</p>
+            <p key={d.id} className="mt-2 text-sm">
+              {d.kind} · {PEOPLE.find((p) => p.id === d.personId)?.name}
+              {d.when && <span className="block text-xs text-foreground/60">{new Date(d.when).toLocaleString([], { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}{d.location ? ` · ${d.location}` : ""}</span>}
+            </p>
           ))}
         </div>
       )}
