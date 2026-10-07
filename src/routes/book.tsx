@@ -62,12 +62,12 @@ function Book() {
   const p = PEOPLE.find((x) => x.id === who);
   const location = place || PLACES[kindId]![0]!;
 
-  function confirm() {
+  async function confirm() {
     const start = new Date(`${day}T${time}`);
     if (!p) return setErr("Pick a match first.");
     if (isNaN(start.getTime()) || start.getTime() < Date.now()) return setErr("Pick a time in the future.");
     if (s.points < k.cost) return setErr("Not enough points.");
-    if (!bookDate(p.id, k.id, start.getTime(), location)) return setErr("Couldn't book. Please try again.");
+    if (!(await bookDate(p.id, k.id, start.getTime(), location))) return setErr("Couldn't book. You may not have enough points.");
     setBooked({ start, title: `${k.label} with ${p.name}`, location });
   }
 

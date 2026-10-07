@@ -50,7 +50,7 @@ function Starters() {
     try {
       const r = await fn({ data: { interests, match, theory, picked: s.picked.slice(0, 10), written: s.written.slice(0, 10) } });
       setOut(r.starters);
-      if (r.starters.length) earn(EARN.openers, "Generated openers");
+      if (r.starters.length) earn("openers");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Something went wrong.");
     } finally {

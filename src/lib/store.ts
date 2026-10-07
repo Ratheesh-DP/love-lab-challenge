@@ -81,48 +81,48 @@ export function update(fn: (s: State) => State) {
 }
 
 export function resetChallenge() {
-  update(() => ({ ...initial, startedAt: Date.now(), ledger: [{ at: Date.now(), amount: 100, label: "Welcome bonus" }] }));
+  // Points are kept on the server; restarting the challenge doesn't reset them
+  update((s) => ({ ...initial, startedAt: Date.now(), points: s.points, ledger: s.ledger }));
 }
 
-const credit = (s: State, amount: number, label: string): State => ({
-  ...s, points: s.points + amount, ledger: [{ at: Date.now(), amount, label }, ...s.ledger].slice(0, 100),
-});
-
-export function earn(amount: number, label: string) {
-  update((s) => credit(s, amount, label));
+type EarnKind = "match" | "note" | "checkin" | "openers";
+// All point changes go through server rules; the app only displays the result
+export async function earn(kind: EarnKind, ref = "") {
+  if (!userId) return;
+  const { error } = await supabase.rpc("earn_points", { _kind: kind, _ref: ref });
+  if (error) console.error(error);
+  await refreshWallet();
 }
 
 export function likePerson(id: string) {
-  const p = PEOPLE.find((x) => x.id === id);
-  update((s) => credit({ ...s, liked: [...s.liked, id] }, EARN.match, `Matched with ${p?.name ?? "someone"}`));
+  update((s) => ({ ...s, liked: [...s.liked, id] }));
+  earn("match", id);
 }
 
 export function saveNote(day: number, text: string) {
-  update((s) => {
-    const firstTime = !s.notes[day] && text.trim().length > 0;
-    const next = { ...s, notes: { ...s.notes, [day]: text } };
-    return firstTime ? credit(next, EARN.note, `Diary entry · day ${day}`) : next;
-  });
+  const firstTime = !state.notes[day] && text.trim().length > 0;
+  update((s) => ({ ...s, notes: { ...s.notes, [day]: text } }));
+  if (firstTime) earn("note", String(day));
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
 export const canCheckIn = (s: State) => s.lastCheckIn !== today();
 export function checkIn() {
-  update((s) => (canCheckIn(s) ? credit({ ...s, lastCheckIn: today() }, EARN.checkIn, "Daily check-in") : s));
+  if (!canCheckIn(state)) return;
+  update((s) => ({ ...s, lastCheckIn: today() }));
+  earn("checkin");
 }
 
-export function bookDate(personId: string, kindId: string, when?: number, location?: string): boolean {
+export async function bookDate(personId: string, kindId: string, when?: number, location?: string): Promise<boolean> {
   const kind = DATE_KINDS.find((k) => k.id === kindId);
   const p = PEOPLE.find((x) => x.id === personId);
-  if (!kind || !p) return false;
-  let ok = false;
-  update((s) => {
-    if (s.points < kind.cost) return s;
-    ok = true;
-    const d: DatePlan = { id: crypto.randomUUID(), personId, kind: kind.label, cost: kind.cost, at: Date.now(), when, location: location?.slice(0, 120) };
-    return credit({ ...s, dates: [d, ...s.dates] }, -kind.cost, `${kind.label} with ${p.name}`);
-  });
-  return ok;
+  if (!kind || !p || !userId) return false;
+  const { error } = await supabase.rpc("spend_on_date", { _kind_id: kind.id, _label: `${kind.label} with ${p.name}` });
+  if (error) { await refreshWallet(); return false; }
+  const d: DatePlan = { id: crypto.randomUUID(), personId, kind: kind.label, cost: kind.cost, at: Date.now(), when, location: location?.slice(0, 120) };
+  update((s) => ({ ...s, dates: [d, ...s.dates] }));
+  await refreshWallet();
+  return true;
 }
 
 export function blockPerson(id: string) {
@@ -193,17 +193,17 @@ export async function attachUser(id: string | null) {
   }
   localStorage.setItem(KEY, JSON.stringify(state));
   subs.forEach((f) => f());
-  await claimPurchases();
+  await refreshWallet();
 }
 
-// Credit any QR purchases an admin has approved since last visit (server marks them claimed once)
-export async function claimPurchases() {
-  if (!userId) return 0;
-  const { data, error } = await supabase.rpc("claim_purchases");
-  if (error || !data?.length) return 0;
-  let total = 0;
-  update((s) => data.reduce((acc, p) => { total += p.points; return credit(acc, p.points, `Bought ${p.points} pts`); }, s));
-  return total;
+// Load the balance and history from the server (the only source of truth for points)
+export async function refreshWallet() {
+  if (!userId) return;
+  const { data: bal } = await supabase.rpc("ensure_wallet");
+  const { data: rows } = await supabase.from("point_ledger").select("amount, label, created_at").order("created_at", { ascending: false }).limit(100);
+  state = { ...state, points: typeof bal === "number" ? bal : state.points,
+    ledger: (rows ?? []).map((r) => ({ at: new Date(r.created_at).getTime(), amount: r.amount, label: r.label })) };
+  subs.forEach((f) => f());
 }
 
 // Which challenge day (1-60) a timestamp falls on
