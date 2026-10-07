@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { claimPurchases, useStore } from "@/lib/store";
+import { refreshWallet, useStore } from "@/lib/store";
 import { supabase } from "@/integrations/supabase/client";
 import qr from "@/assets/upi-qr.png.asset.json";
 
@@ -14,7 +14,7 @@ export const BUNDLES = [
 const UPI_ID = "d.p.ratheesh007@okhdfcbank";
 const UPI_NAME = "Ratheesh D P";
 
-type Req = { id: string; points: number; amount_inr: number; status: string; created_at: string };
+type Req = { id: string; points: number; amount_inr: number; status: string; created_at: string; reject_reason: string | null };
 
 export const Route = createFileRoute("/store")({
   head: () => ({
@@ -41,9 +41,8 @@ function Store() {
   const b = BUNDLES.find((x) => x.id === chosen)!;
 
   async function refresh() {
-    const added = await claimPurchases();
-    if (added) setMsg(`${added} points added to your wallet.`);
-    const { data } = await supabase.from("purchase_requests").select("id, points, amount_inr, status, created_at").order("created_at", { ascending: false }).limit(10);
+    await refreshWallet();
+    const { data } = await supabase.from("purchase_requests").select("id, points, amount_inr, status, created_at, reject_reason").order("created_at", { ascending: false }).limit(10);
     setReqs(data ?? []);
   }
   useEffect(() => { refresh(); }, []);
@@ -118,9 +117,9 @@ function Store() {
           <p className="eyebrow">Your purchases</p>
           {reqs.map((r) => (
             <div key={r.id} className="mt-2 flex justify-between text-sm">
-              <span>{r.points} pts · ₹{r.amount_inr}</span>
+              <span>{r.points} pts · ₹{r.amount_inr}{r.reject_reason && <span className="block text-xs text-foreground/50">{r.reject_reason}</span>}</span>
               <span className={r.status === "approved" ? "text-practical" : r.status === "rejected" ? "text-destructive" : "text-foreground/50"}>
-                {r.status === "approved" ? "Added" : r.status === "rejected" ? "Not found" : "Checking"}
+                {r.status === "approved" ? "Added" : r.status === "rejected" ? "Rejected" : "Checking"}
               </span>
             </div>
           ))}

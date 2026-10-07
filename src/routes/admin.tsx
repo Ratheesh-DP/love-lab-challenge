@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 
-type Req = { id: string; user_id: string; points: number; amount_inr: number; reference: string; status: string; created_at: string };
+type Req = { id: string; user_id: string; points: number; amount_inr: number; reference: string; status: string; created_at: string; reject_reason: string | null };
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -34,8 +34,14 @@ function Admin() {
   }
   useEffect(() => { load(); }, []);
 
-  async function review(id: string, status: "approved" | "rejected") {
-    await supabase.from("purchase_requests").update({ status, reviewed_at: new Date().toISOString() }).eq("id", id).eq("status", "pending");
+  const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [err, setErr] = useState("");
+  async function review(id: string, approve: boolean) {
+    const reason = (reasons[id] ?? "").trim();
+    if (!approve && !reason) return setErr("Add a reason before rejecting, so the dater knows why.");
+    setErr("");
+    const { error } = await supabase.rpc("review_purchase", { _id: id, _approve: approve, _reason: reason });
+    if (error) setErr("Couldn't save that review. Please try again.");
     load();
   }
 
@@ -46,6 +52,7 @@ function Admin() {
         <h1 className="mt-1 font-display text-3xl">Approve payments</h1>
         <p className="mt-1 text-sm text-foreground/60">Check each transaction ID in your UPI app before approving.</p>
       </div>
+      {err && <p className="mx-5 mt-3 text-sm text-destructive" role="alert">{err}</p>}
       {isAdmin === false && <p className="mx-5 mt-4 text-sm">You don't have access to this page.</p>}
       <div className="mx-5 mt-4 space-y-3">
         {reqs.map((r) => (
@@ -54,12 +61,17 @@ function Admin() {
             <p className="mt-1 font-mono text-sm">{r.reference}</p>
             <p className="text-xs text-foreground/50">{new Date(r.created_at).toLocaleString()}</p>
             {r.status === "pending" ? (
-              <div className="mt-3 flex gap-2">
-                <button onClick={() => review(r.id, "approved")} className="flex-1 rounded-full bg-practical py-2 text-sm font-semibold text-primary-foreground">Approve</button>
-                <button onClick={() => review(r.id, "rejected")} className="flex-1 rounded-full py-2 text-sm font-semibold ring-1 ring-border">Reject</button>
+              <>
+              <input value={reasons[r.id] ?? ""} onChange={(e) => setReasons({ ...reasons, [r.id]: e.target.value })} maxLength={300}
+                placeholder="Reason if rejecting, e.g. No payment found with this ID"
+                className="mt-3 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+              <div className="mt-2 flex gap-2">
+                <button onClick={() => review(r.id, true)} className="flex-1 rounded-full bg-practical py-2 text-sm font-semibold text-primary-foreground">Approve</button>
+                <button onClick={() => review(r.id, false)} className="flex-1 rounded-full py-2 text-sm font-semibold ring-1 ring-border">Reject</button>
               </div>
+              </>
             ) : (
-              <p className="mt-2 text-xs font-semibold">{r.status === "approved" ? "Approved" : "Rejected"}</p>
+              <p className="mt-2 text-xs font-semibold">{r.status === "approved" ? "Approved" : `Rejected${r.reject_reason ? ` · ${r.reject_reason}` : ""}`}</p>
             )}
           </div>
         ))}
