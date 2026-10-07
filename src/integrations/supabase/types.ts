@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          read: boolean
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          read?: boolean
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          read?: boolean
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      point_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          kind: string
+          label: string
+          ref: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          kind: string
+          label: string
+          ref?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          label?: string
+          ref?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       purchase_requests: {
         Row: {
           amount_inr: number
@@ -23,6 +80,7 @@ export type Database = {
           id: string
           points: number
           reference: string
+          reject_reason: string | null
           reviewed_at: string | null
           status: string
           user_id: string
@@ -35,6 +93,7 @@ export type Database = {
           id?: string
           points: number
           reference: string
+          reject_reason?: string | null
           reviewed_at?: string | null
           status?: string
           user_id?: string
@@ -47,6 +106,7 @@ export type Database = {
           id?: string
           points?: number
           reference?: string
+          reject_reason?: string | null
           reviewed_at?: string | null
           status?: string
           user_id?: string
@@ -116,25 +176,55 @@ export type Database = {
         }
         Relationships: []
       }
+      wallets: {
+        Row: {
+          points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      claim_purchases: {
-        Args: never
-        Returns: {
-          bundle_id: string
-          id: string
-          points: number
-        }[]
+      _apply_points: {
+        Args: {
+          _amount: number
+          _kind: string
+          _label: string
+          _ref: string
+          _uid: string
+        }
+        Returns: number
       }
+      earn_points: { Args: { _kind: string; _ref: string }; Returns: number }
+      ensure_wallet: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      review_purchase: {
+        Args: { _approve: boolean; _id: string; _reason: string }
+        Returns: undefined
+      }
+      spend_on_date: {
+        Args: { _kind_id: string; _label: string }
+        Returns: number
       }
     }
     Enums: {
