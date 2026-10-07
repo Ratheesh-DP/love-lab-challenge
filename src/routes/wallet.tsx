@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { bookDate, canCheckIn, checkIn, DATE_KINDS, EARN, PEOPLE, useStore } from "@/lib/store";
+import { canCheckIn, checkIn, DATE_KINDS, EARN, PEOPLE, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/wallet")({
   validateSearch: (s: Record<string, unknown>) => ({ match: typeof s["match"] === "string" ? (s["match"] as string) : undefined }),
