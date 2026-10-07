@@ -27,7 +27,7 @@ export const PEOPLE: Person[] = [
 
 export type Report = { id: string; reason: string; note: string; at: number };
 export type Txn = { at: number; amount: number; label: string };
-export type DatePlan = { id: string; personId: string; kind: string; cost: number; at: number; when?: number; location?: string };
+export type DatePlan = { id: string; personId: string; kind: string; cost: number; at: number; when?: number | undefined; location?: string | undefined };
 
 type State = {
   side: Theory;
