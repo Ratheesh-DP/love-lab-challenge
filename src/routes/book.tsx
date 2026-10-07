@@ -49,7 +49,8 @@ function Book() {
   const nav = useNavigate();
   const { match, kind } = Route.useSearch();
   const matches = s.liked.filter((id) => !s.blocked.includes(id)).map((id) => PEOPLE.find((p) => p.id === id)!).filter(Boolean);
-  const [who, setWho] = useState(match ?? matches[0]?.id ?? "");
+  const [picked, setWho] = useState(match ?? "");
+  const who = picked || matches[0]?.id || "";
   const [kindId, setKindId] = useState(kind ?? DATE_KINDS[0]!.id);
   const challengeEnd = new Date(s.startedAt + 59 * 864e5);
   const [day, setDay] = useState(localDay(new Date(Date.now() + 864e5)));
