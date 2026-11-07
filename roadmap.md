@@ -1,0 +1,3 @@
+- [ ] Finish in-app purchase approval/rejection notifications and server-only point balance changes.
+- [ ] Verify the date booking flow and journey/phone calendar updates.
+- [ ] Set up the user's Stripe account and implement real bundle checkout after the secure account connection completes.
