@@ -8,6 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
-- Dater state syncs as one JSON row per user in user_state (store.ts attachUser/scheduleSave); reports also go to a separate reports table so moderators can review them. Why: cross-device persistence with minimal refactor.
-- Points live in the user-editable state blob; move balances to server-validated logic before selling points. Why: client-written points can be faked.
-- Store bundles live in src/routes/store.tsx (BUNDLES) and must match the purchase_requests insert policy; UPI payments are approved by an admin, then credited once via claim_purchases(). Why: QR payments cannot be verified automatically.
+- User challenge data syncs per account, but the wallet and point ledger are server-authoritative and change only through validated database functions. Why: browser state can be edited.
+- Admin purchase decisions use one role-checked database function that updates the purchase, credits points atomically, and creates the dater's notification. Why: approval, wallet credit, and notice must not drift apart.
+- QR purchases stay manual until a payment provider is connected; keep bundle identifiers and prices aligned with the database purchase policy. Why: QR transfers cannot be verified automatically.

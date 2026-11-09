@@ -52,7 +52,8 @@ function Store() {
     if (!/^[A-Za-z0-9]{6,40}$/.test(r)) return setMsg("Enter the UPI transaction ID (letters and numbers only).");
     setBusy(true);
     const { data: u } = await supabase.auth.getUser();
-    const { error } = await supabase.from("purchase_requests").insert({ user_id: u.user!.id, bundle_id: b.id, points: b.points, amount_inr: b.inr, reference: r });
+    if (!u.user) { setBusy(false); return setMsg("Sign in again before submitting a purchase."); }
+    const { error } = await supabase.from("purchase_requests").insert({ user_id: u.user.id, bundle_id: b.id, points: b.points, amount_inr: b.inr, reference: r });
     setBusy(false);
     if (error) return setMsg(error.code === "23505" ? "That transaction ID has already been used." : "Couldn't send. Please try again.");
     setRef(""); setStep("pick");

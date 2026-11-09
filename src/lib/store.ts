@@ -27,7 +27,7 @@ export const PEOPLE: Person[] = [
 
 export type Report = { id: string; reason: string; note: string; at: number };
 export type Txn = { at: number; amount: number; label: string };
-export type DatePlan = { id: string; personId: string; kind: string; cost: number; at: number; when?: number; location?: string };
+export type DatePlan = { id: string; personId: string; kind: string; cost: number; at: number; when?: number | undefined; location?: string | undefined };
 
 type State = {
   side: Theory;
@@ -113,7 +113,7 @@ export function checkIn() {
   earn("checkin");
 }
 
-export async function bookDate(personId: string, kindId: string, when?: number, location?: string): Promise<boolean> {
+export async function bookDate(personId: string, kindId: string, when: number, location: string): Promise<boolean> {
   const kind = DATE_KINDS.find((k) => k.id === kindId);
   const p = PEOPLE.find((x) => x.id === personId);
   if (!kind || !p || !userId) return false;
