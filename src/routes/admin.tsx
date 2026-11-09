@@ -26,7 +26,8 @@ function Admin() {
 
   async function load() {
     const { data: u } = await supabase.auth.getUser();
-    const { data: ok } = await supabase.rpc("has_role", { _user_id: u.user!.id, _role: "admin" });
+    if (!u.user) { setIsAdmin(false); return; }
+    const { data: ok } = await supabase.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
     setIsAdmin(!!ok);
     if (!ok) return;
     const { data } = await supabase.from("purchase_requests").select("*").order("created_at", { ascending: false }).limit(50);
@@ -42,7 +43,8 @@ function Admin() {
     setErr("");
     const { error } = await supabase.rpc("review_purchase", { _id: id, _approve: approve, _reason: reason });
     if (error) setErr("Couldn't save that review. Please try again.");
-    load();
+    else setReasons((prev) => ({ ...prev, [id]: "" }));
+    await load();
   }
 
   return (

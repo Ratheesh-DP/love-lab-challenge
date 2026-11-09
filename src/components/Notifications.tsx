@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { refreshWallet } from "@/lib/store";
 
@@ -7,15 +7,15 @@ type Note = { id: string; title: string; body: string; read: boolean; created_at
 export function NotificationBell() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [open, setOpen] = useState(false);
+  const seenIds = useRef<Set<string>>(new Set());
 
   async function load() {
     const { data } = await supabase.from("notifications").select("id, title, body, read, created_at").order("created_at", { ascending: false }).limit(20);
     const list = (data as Note[]) ?? [];
-    setNotes((prev) => {
-      // A new notification may mean points changed — refresh the balance
-      if (list.some((n) => !prev.find((p) => p.id === n.id)) && prev.length) refreshWallet();
-      return list;
-    });
+    const hasNew = list.some((n) => !seenIds.current.has(n.id));
+    seenIds.current = new Set(list.map((n) => n.id));
+    if (hasNew) void refreshWallet();
+    setNotes(list);
   }
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export function NotificationBell() {
 
   return (
     <div className="relative">
-      <button onClick={toggle} aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
+      <button onClick={toggle} aria-expanded={open} aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
         className="relative flex size-8 items-center justify-center rounded-full ring-1 ring-border">
         <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
           <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
