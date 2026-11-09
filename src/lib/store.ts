@@ -178,7 +178,8 @@ export function scheduleSave() {
   const uid = userId;
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
-    supabase.from("user_state").upsert({ user_id: uid, state: state as never, updated_at: new Date().toISOString() }).then(({ error }) => error && console.error(error));
+    const { points: _ignoredPoints, ledger: _ignoredLedger, ...challengeState } = state;
+    supabase.from("user_state").upsert({ user_id: uid, state: challengeState as never, updated_at: new Date().toISOString() }).then(({ error }) => error && console.error(error));
   }, 600);
 }
 export async function attachUser(id: string | null) {
@@ -201,7 +202,7 @@ export async function refreshWallet() {
   if (!userId) return;
   const { data: bal } = await supabase.rpc("ensure_wallet");
   const { data: rows } = await supabase.from("point_ledger").select("amount, label, created_at").order("created_at", { ascending: false }).limit(100);
-  state = { ...state, points: typeof bal === "number" ? bal : state.points,
+  state = { ...state, points: typeof bal === "number" ? bal : 0,
     ledger: (rows ?? []).map((r) => ({ at: new Date(r.created_at).getTime(), amount: r.amount, label: r.label })) };
   subs.forEach((f) => f());
 }
