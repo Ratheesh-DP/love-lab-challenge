@@ -75,7 +75,8 @@ function load() {
 export function update(fn: (s: State) => State) {
   load();
   state = fn(state);
-  localStorage.setItem(KEY, JSON.stringify(state));
+  const { points: _ignoredPoints, ledger: _ignoredLedger, ...challengeState } = state;
+  localStorage.setItem(KEY, JSON.stringify(challengeState));
   subs.forEach((f) => f());
   scheduleSave();
 }
