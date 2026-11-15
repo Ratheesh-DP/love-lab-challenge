@@ -57,7 +57,7 @@ export const REPORT_REASONS = ["Fake profile or scam", "Harassment or threats", 
 const KEY = "matchmake-v1";
 const initial: State = {
   side: "practical", startedAt: Date.now() - 11 * 864e5, liked: [], skipped: [], notes: {},
-  blocked: [], reports: [], points: 100, ledger: [{ at: Date.now(), amount: 100, label: "Welcome bonus" }], dates: [], lastCheckIn: null, picked: [], written: [],
+  blocked: [], reports: [], points: 0, ledger: [], dates: [], lastCheckIn: null, picked: [], written: [],
 };
 let state: State = initial;
 let loaded = false;
@@ -68,7 +68,7 @@ function load() {
   loaded = true;
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) state = { ...initial, ...JSON.parse(raw) };
+    if (raw) state = { ...initial, ...JSON.parse(raw), points: 0, ledger: [] };
   } catch {}
 }
 
