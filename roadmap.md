@@ -1,4 +1,5 @@
-- [ ] Finish in-app purchase approval/rejection notifications and server-only point balance changes.
-- [ ] Verify the date booking flow and journey/phone calendar updates.
-- [ ] Set up the user's Stripe account and implement real bundle checkout after the secure account connection completes.
-- [ ] Review the WhatsApp information and confirm what the user wants to build with it.
+- [x] Finish in-app purchase approval/rejection notifications and server-only point balance changes.
+- [x] Build date booking and show booked dates in the challenge calendar; phone calendar export is available.
+- [ ] Set up payment checkout — blocked because built-in payment eligibility rejects the specified region and product type; don't proceed with BYOK without renewed explicit authorization (earlier secure prompt was declined).
+- [ ] Connect WhatsApp Business for purchase alerts — blocked because no connection is available and the user's connection prompt was declined; requires a WhatsApp Business account and Meta approval.
+- [ ] Resume Lovable Cloud — database work and purchase-alert verification are blocked while the hosted database is paused; user must resume it.
