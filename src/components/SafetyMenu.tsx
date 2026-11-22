@@ -6,12 +6,24 @@ export function SafetyMenu({ person, onDone }: { person: Person; onDone?: () => 
   const [reason, setReason] = useState<string>(REPORT_REASONS[0]!);
   const [note, setNote] = useState("");
   const [alsoBlock, setAlsoBlock] = useState(true);
+  const [submittingReport, setSubmittingReport] = useState(false);
+  const [reportError, setReportError] = useState("");
 
   const close = () => {
+    if (submittingReport) return;
     // Block only after the confirmation is dismissed, so this sheet stays mounted
     if (open === "sent" && alsoBlock) { blockPerson(person.id); onDone?.(); }
-    setOpen(null); setNote("");
+    setOpen(null); setNote(""); setReportError("");
   };
+
+  async function sendReport() {
+    setSubmittingReport(true);
+    setReportError("");
+    const saved = await reportPerson(person.id, reason, note.trim());
+    setSubmittingReport(false);
+    if (saved) setOpen("sent");
+    else setReportError("Couldn't send your report. Please try again.");
+  }
 
   return (
     <>
@@ -26,7 +38,7 @@ export function SafetyMenu({ person, onDone }: { person: Person; onDone?: () => 
                 <p className="mt-1 text-sm text-foreground/60">Your safety comes first. They won't be told.</p>
                 <button onClick={() => { blockPerson(person.id); close(); onDone?.(); }}
                   className="mt-4 w-full rounded-full py-3 text-sm font-semibold ring-1 ring-border">Block {person.name}</button>
-                <button onClick={() => setOpen("report")}
+                <button onClick={() => { setReportError(""); setOpen("report"); }}
                   className="mt-2 w-full rounded-full bg-destructive py-3 text-sm font-semibold text-destructive-foreground">Report profile</button>
                 <button onClick={close} className="mt-2 w-full py-2 text-sm font-semibold text-foreground/50">Cancel</button>
               </>
@@ -48,8 +60,9 @@ export function SafetyMenu({ person, onDone }: { person: Person; onDone?: () => 
                   <input type="checkbox" checked={alsoBlock} onChange={(e) => setAlsoBlock(e.target.checked)} className="accent-foreground" />
                   Also block {person.name}
                 </label>
-                <button onClick={() => { reportPerson(person.id, reason, note.trim(), false); setOpen("sent"); }}
-                  className="mt-4 w-full rounded-full bg-destructive py-3 text-sm font-semibold text-destructive-foreground">Send report</button>
+                {reportError && <p className="mt-3 text-sm text-destructive" role="alert">{reportError}</p>}
+                <button disabled={submittingReport} onClick={() => void sendReport()}
+                  className="mt-4 w-full rounded-full bg-destructive py-3 text-sm font-semibold text-destructive-foreground disabled:opacity-50">{submittingReport ? "Sending…" : "Send report"}</button>
               </>
             )}
             {open === "sent" && (

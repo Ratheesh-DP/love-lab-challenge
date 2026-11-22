@@ -58,7 +58,7 @@ function Profile() {
             const p = PEOPLE.find((x) => x.id === id);
             return (
               <div key={id} className="mt-2 flex items-center justify-between text-sm">
-                <span>{p?.name ?? id}{s.reports.some((r) => r.id === id) ? " · reported" : ""}</span>
+                <span>{p?.name ?? id}</span>
                 <button onClick={() => unblockPerson(id)} className="text-xs font-semibold text-foreground/55">Unblock</button>
               </div>
             );

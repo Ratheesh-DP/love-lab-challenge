@@ -3,6 +3,7 @@ import nora from "@/assets/nora.jpg";
 import theo from "@/assets/theo.jpg";
 import jonah from "@/assets/jonah.jpg";
 import ines from "@/assets/ines.jpg";
+import { persistReport } from "@/lib/report-submission";
 
 export type Theory = "practical" | "adventurous";
 
@@ -25,7 +26,6 @@ export const PEOPLE: Person[] = [
   { id: "ines", name: "Inés", age: 27, photo: ines, theory: "adventurous", line: "Will race you to the top of the cliff", bio: "Marine biologist. Swims in cold water for fun. Looking for someone who says yes first.", tags: ["Outdoors", "Travel", "Live music"], score: 84 },
 ];
 
-export type Report = { id: string; reason: string; note: string; at: number };
 export type Txn = { at: number; amount: number; label: string };
 export type DatePlan = { id: string; personId: string; kind: string; cost: number; at: number; when?: number | undefined; location?: string | undefined };
 
@@ -36,7 +36,6 @@ type State = {
   skipped: string[];
   notes: Record<number, string>;
   blocked: string[];
-  reports: Report[];
   points: number;
   ledger: Txn[];
   dates: DatePlan[];
@@ -57,7 +56,7 @@ export const REPORT_REASONS = ["Fake profile or scam", "Harassment or threats", 
 const KEY = "matchmake-v1";
 const initial: State = {
   side: "practical", startedAt: Date.now() - 11 * 864e5, liked: [], skipped: [], notes: {},
-  blocked: [], reports: [], points: 0, ledger: [], dates: [], lastCheckIn: null, picked: [], written: [],
+  blocked: [], points: 0, ledger: [], dates: [], lastCheckIn: null, picked: [], written: [],
 };
 let state: State = initial;
 let loaded = false;
@@ -68,7 +67,11 @@ function load() {
   loaded = true;
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) state = { ...initial, ...JSON.parse(raw), points: 0, ledger: [] };
+    if (raw) {
+      const saved = JSON.parse(raw) as Partial<State> & { reports?: unknown };
+      const { reports: _legacyReports, ...challengeState } = saved;
+      state = { ...initial, ...challengeState, points: 0, ledger: [] };
+    }
   } catch {}
 }
 
@@ -132,10 +135,12 @@ export function blockPerson(id: string) {
 export function unblockPerson(id: string) {
   update((s) => ({ ...s, blocked: s.blocked.filter((x) => x !== id) }));
 }
-export function reportPerson(id: string, reason: string, note: string, alsoBlock: boolean) {
-  update((s) => ({ ...s, reports: [{ id, reason, note: note.slice(0, 500), at: Date.now() }, ...s.reports] }));
-  if (userId) supabase.from("reports").insert({ person_id: id, reason: reason.slice(0, 100), note: note.slice(0, 500) }).then(({ error }) => error && console.error(error));
-  if (alsoBlock) blockPerson(id);
+export async function reportPerson(id: string, reason: string, note: string): Promise<boolean> {
+  if (!userId) return false;
+  return persistReport(
+    (payload) => supabase.from("reports").insert(payload),
+    { person_id: id, reason: reason.slice(0, 100), note: note.slice(0, 500) },
+  );
 }
 
 export function useStore() {
@@ -188,7 +193,9 @@ export async function attachUser(id: string | null) {
   if (!id) return;
   const { data } = await supabase.from("user_state").select("state").eq("user_id", id).maybeSingle();
   if (data?.state && Object.keys(data.state as object).length) {
-    state = { ...initial, ...(data.state as Partial<State>) };
+    const saved = data.state as Partial<State> & { reports?: unknown };
+    const { reports: _legacyReports, ...challengeState } = saved;
+    state = { ...initial, ...challengeState };
   } else {
     load(); // first sign-in: carry this device's progress into the account
     scheduleSave();
