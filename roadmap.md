@@ -1,5 +1,5 @@
 - [x] Finish in-app purchase approval/rejection notifications and server-only point balance changes.
 - [x] Build date booking and show booked dates in the challenge calendar; phone calendar export is available.
-- [x] Keep the gray UPI QR purchase flow with admin review; the user chose this over automatic Stripe checkout.
+- [ ] Replace the gray UPI/manual review flow with automatic Stripe checkout, as newly requested; secure account setup and an active database are required.
 - [ ] Connect WhatsApp Business for purchase alerts — blocked because no connection is available and the user's connection prompt was declined; requires a WhatsApp Business account and Meta approval.
 - [ ] Resume Lovable Cloud — database work and purchase-alert verification are blocked while the hosted database is paused; user must resume it.
